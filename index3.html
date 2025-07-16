@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supabase CMS | Rich Text Editor</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #4361ee;
+      --secondary-color: #3f37c9;
+      --accent-color: #4895ef;
+      --success-color: #4cc9f0;
+      --warning-color: #f72585;
+      --light-bg: #f8f9fa;
+      --dark-text: #212529;
+    }
+    
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      min-height: 100vh;
+      padding-bottom: 40px;
+    }
+    
+    .container {
+      max-width: 1400px;
+    }
+    
+    .header-gradient {
+      background: linear-gradient(120deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3);
+      margin-top: 20px;
+      margin-bottom: 30px;
+    }
+    
+    .nav-tabs .nav-link {
+      color: #495057;
+      font-weight: 500;
+      border: none;
+      padding: 12px 20px;
+      transition: all 0.3s;
+    }
+    
+    .nav-tabs .nav-link.active {
+      color: var(--primary-color);
+      border-bottom: 3px solid var(--primary-color);
+      background: transparent;
+      font-weight: 600;
+    }
+    
+    .nav-tabs .nav-link:hover:not(.active) {
+      background-color: rgba(67, 97, 238, 0.05);
+    }
+    
+    .card {
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+      border: none;
+      margin-bottom: 24px;
+      overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.12);
+    }
+    
+    .card-header {
+      background: linear-gradient(120deg, #f8f9fa, #e9ecef);
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      padding: 16px 24px;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    
+    .list-group-item {
+      border: none;
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      padding: 16px 24px;
+      transition: all 0.3s;
+      background-color: rgba(255, 255, 255, 0.7);
+    }
+    
+    .list-group-item:hover {
+      background-color: rgba(67, 97, 238, 0.08);
+      transform: translateX(5px);
+    }
+    
+    .content-preview {
+      max-height: 100px;
+      overflow: hidden;
+      position: relative;
+      background-color: rgba(255, 255, 255, 0.7);
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+    
+    .content-preview::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 30px;
+      background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
+    }
+    
+    .ql-editor {
+      min-height: 250px;
+      font-size: 16px;
+      line-height: 1.6;
+      background-color: white;
+    }
+    
+    .stats-card {
+      background: white;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      text-align: center;
+      transition: all 0.3s;
+    }
+    
+    .stats-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    }
+    
+    .stats-number {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 5px;
+    }
+    
+    .stats-label {
+      color: #6c757d;
+      font-size: 0.95rem;
+      font-weight: 500;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(120deg, var(--primary-color), var(--secondary-color));
+      border: none;
+      transition: all 0.3s;
+    }
+    
+    .btn-primary:hover {
+      background: linear-gradient(120deg, var(--secondary-color), var(--primary-color));
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+    }
+    
+    .btn-outline-primary {
+      color: var(--primary-color);
+      border-color: var(--primary-color);
+      transition: all 0.3s;
+    }
+    
+    .btn-outline-primary:hover {
+      background: linear-gradient(120deg, var(--primary-color), var(--secondary-color));
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+    }
+    
+    .btn-danger {
+      background: linear-gradient(120deg, var(--warning-color), #d0006f);
+      border: none;
+      transition: all 0.3s;
+    }
+    
+    .btn-danger:hover {
+      background: linear-gradient(120deg, #d0006f, var(--warning-color));
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(247, 37, 133, 0.3);
+    }
+    
+    .badge-light {
+      background-color: rgba(67, 97, 238, 0.15);
+      color: var(--primary-color);
+      font-weight: 600;
+      padding: 8px 12px;
+      border-radius: 20px;
+    }
+    
+    .preview-modal .modal-content {
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    }
+    
+    .preview-modal .ql-editor {
+      min-height: 500px;
+      max-height: 70vh;
+      overflow: auto;
+      background-color: #f8f9fa;
+    }
+    
+    .search-container {
+      position: relative;
+    }
+    
+    .search-container i {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #6c757d;
+      z-index: 10;
+    }
+    
+    .search-container input {
+      padding-left: 46px;
+      border-radius: 50px;
+      height: 46px;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+      margin-bottom: 30px;
+    }
+    
+    .editor-container {
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1050;
+      padding: 15px 25px;
+      border-radius: 10px;
+      background: linear-gradient(120deg, #4cc9f0, #3a86ff);
+      color: white;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+      transform: translateX(120%);
+      transition: transform 0.5s ease;
+    }
+    
+    .notification.show {
+      transform: translateX(0);
+    }
+    
+    .notification.error {
+      background: linear-gradient(120deg, #f72585, #d0006f);
+    }
+    
+    .word-icon {
+      background: linear-gradient(120deg, #2a5699, #1e3a8a);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    
+    .help-text {
+      background-color: rgba(67, 97, 238, 0.08);
+      border-left: 4px solid var(--primary-color);
+      padding: 12px 16px;
+      border-radius: 0 8px 8px 0;
+      margin-top: 15px;
+    }
+    
+    .footer {
+      text-align: center;
+      padding: 20px 0;
+      color: #6c757d;
+      font-size: 0.9rem;
+    }
+    
+    .spinner {
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      vertical-align: text-bottom;
+      border: .25em solid currentColor;
+      border-right-color: transparent;
+      border-radius: 50%;
+      animation: spinner-border .75s linear infinite;
+      margin-left: 5px;
+    }
+    
+    @keyframes spinner-border {
+      to { transform: rotate(360deg); }
+    }
+    
+    .supabase-connected {
+      position: fixed;
+      bottom: 10px;
+      left: 10px;
+      background: #3ecf8e;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container py-4">
+    <div class="header-gradient p-4 mb-4">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h1 class="mb-1"><i class="fas fa-language me-3"></i>Supabase Content Manager</h1>
+          <p class="mb-0">Rich text editor with Word formatting support</p>
+        </div>
+        <div>
+          <button class="btn btn-light" id="refresh-btn">
+            <i class="fas fa-sync-alt me-2"></i>Refresh Data
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stats-card">
+        <div class="stats-number" id="languages-count">0</div>
+        <div class="stats-label">Languages</div>
+        <i class="fas fa-globe-americas mt-3" style="font-size: 2rem; color: var(--primary-color);"></i>
+      </div>
+      <div class="stats-card">
+        <div class="stats-number" id="entities-count">0</div>
+        <div class="stats-label">Entities</div>
+        <i class="fas fa-sitemap mt-3" style="font-size: 2rem; color: var(--primary-color);"></i>
+      </div>
+      <div class="stats-card">
+        <div class="stats-number" id="translations-count">0</div>
+        <div class="stats-label">Translations</div>
+        <i class="fas fa-exchange-alt mt-3" style="font-size: 2rem; color: var(--primary-color);"></i>
+      </div>
+    </div>
+
+    <ul class="nav nav-tabs" id="adminTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="lang-tab" data-bs-toggle="tab" data-bs-target="#lang" type="button">
+          <i class="fas fa-language me-2"></i>Languages
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="entity-tab" data-bs-toggle="tab" data-bs-target="#entity" type="button">
+          <i class="fas fa-sitemap me-2"></i>Entities
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="trans-tab" data-bs-toggle="tab" data-bs-target="#translations" type="button">
+          <i class="fas fa-exchange-alt me-2"></i>Translations
+        </button>
+      </li>
+    </ul>
+
+    <div class="tab-content pt-4">
+      <!-- Languages Tab -->
+      <div class="tab-pane fade show active" id="lang">
+        <div class="card">
+          <div class="card-header">Add New Language</div>
+          <div class="card-body">
+            <form id="form-language" class="row g-3">
+              <div class="col-md-3">
+                <label for="code" class="form-label">Code</label>
+                <input type="text" class="form-control" id="code" placeholder="e.g. en, fr">
+              </div>
+              <div class="col-md-6">
+                <label for="name" class="form-label">Name</label>
+                <input type="text" class="form-control" id="name" placeholder="e.g. English">
+              </div>
+              <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                  <i class="fas fa-plus me-2"></i>Add Language
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Existing Languages</span>
+            <span class="badge bg-light" id="lang-count-badge">0 languages</span>
+          </div>
+          <ul id="language-list" class="list-group list-group-flush"></ul>
+        </div>
+      </div>
+
+      <!-- Entities Tab -->
+      <div class="tab-pane fade" id="entity">
+        <div class="card">
+          <div class="card-header">Add New Entity</div>
+          <div class="card-body">
+            <form id="form-entity" class="row g-3">
+              <div class="col-md-8">
+                <label for="parent" class="form-label">Parent Entity</label>
+                <select id="parent" class="form-select">
+                  <option value="">— None (Country) —</option>
+                </select>
+              </div>
+              <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                  <i class="fas fa-plus me-2"></i>Add Entity
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Existing Entities</span>
+            <span class="badge bg-light" id="entity-count-badge">0 entities</span>
+          </div>
+          <ul id="entity-list" class="list-group list-group-flush"></ul>
+        </div>
+      </div>
+
+      <!-- Translations Tab -->
+      <div class="tab-pane fade" id="translations">
+        <div class="card">
+          <div class="card-header">Add New Translation</div>
+          <div class="card-body">
+            <form id="form-trans" class="row g-3">
+              <div class="col-md-6">
+                <label for="trans-entity" class="form-label">Entity</label>
+                <select id="trans-entity" class="form-select"></select>
+              </div>
+              <div class="col-md-6">
+                <label for="trans-lang" class="form-label">Language</label>
+                <select id="trans-lang" class="form-select"></select>
+              </div>
+              <div class="col-md-12">
+                <label for="title" class="form-label">Title</label>
+                <input type="text" class="form-control" id="title" placeholder="Enter title">
+              </div>
+              <div class="col-md-12">
+                <label for="body" class="form-label">Content</label>
+                <div class="editor-container border rounded">
+                  <div id="body-editor"></div>
+                </div>
+                <div class="help-text">
+                  <p class="mb-1"><strong>Word Document Support:</strong></p>
+                  <p class="mb-0">Paste content directly from Word documents - formatting, images, tables, and special characters like <sup>superscript</sup> and <sub>subscript</sub> will be preserved.</p>
+                  <div class="word-icon mt-2">
+                    <i class="fab fa-microsoft"></i>
+                    <span>Word Formatting Supported</span>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-12">
+                <button type="submit" class="btn btn-primary w-100 py-3">
+                  <i class="fas fa-save me-2"></i>Save Translation
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <span>Translation Management</span>
+            <span class="badge bg-light" id="trans-count-badge">0 translations</span>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-8 search-container">
+                <i class="fas fa-search"></i>
+                <input type="text" class="form-control" id="search-translations" placeholder="Search by title, entity or language code...">
+              </div>
+              <div class="col-md-4 d-flex gap-2">
+                <button class="btn btn-outline-primary w-100" id="export-csv">
+                  <i class="fas fa-file-export me-2"></i>Export CSV
+                </button>
+                <label class="btn btn-outline-secondary w-100" style="margin-bottom:0">
+                  <i class="fas fa-file-import me-2"></i>Import CSV
+                  <input type="file" id="import-csv" accept=".csv" hidden>
+                </label>
+              </div>
+            </div>
+          </div>
+          <ul id="trans-list" class="list-group list-group-flush"></ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview Modal -->
+  <div class="modal fade preview-modal" id="previewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Content Preview</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="preview-content"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal -->
+  <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Content</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div id="modal-editor"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="save-content">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notification -->
+  <div class="notification" id="notification">
+    <i class="fas fa-check-circle me-2"></i>
+    <span id="notification-message">Operation completed successfully!</span>
+  </div>
+
+  <div class="footer">
+    <p>Supabase CMS &copy; 2023 | Rich Text Editor with Word Formatting Support</p>
+  </div>
+
+  <div class="supabase-connected">
+    <i class="fas fa-database"></i>
+    <span>Connected to Supabase</span>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.51.0/dist/umd/supabase.min.js"></script>
+  
+  <script>
+    // Initialize Supabase connection
+    const supabase = window.supabase.createClient(
+      'https://kdrkwwazwtuvlfqhjefe.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtkcmt3d2F6d3R1dmxmcWhqZWZlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDI1MDk5OTMsImV4cCI6MjA1ODA4NTk5M30.qNgjoewVW8f1T4MhJOObs6-LkikxVsqO4PCkp9OeW4o'
+    );
+
+    // Initialize Quill editor with subscript and superscript support
+    const bodyEditor = new Quill('#body-editor', {
+      modules: { 
+        toolbar: [
+          [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          ['blockquote', 'code-block'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'script': 'sub'}, { 'script': 'super' }],
+          [{ 'indent': '-1'}, { 'indent': '+1' }],
+          [{ 'color': [] }, { 'background': [] }],
+          [{ 'align': [] }],
+          ['link', 'image', 'video'],
+          ['clean']
+        ]
+      },
+      theme: 'snow'
+    });
+
+    const modalEditor = new Quill('#modal-editor', {
+      modules: { 
+        toolbar: [
+          [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          ['blockquote', 'code-block'],
+          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+          [{ 'script': 'sub'}, { 'script': 'super' }],
+          [{ 'indent': '-1'}, { 'indent': '+1' }],
+          [{ 'color': [] }, { 'background': [] }],
+          [{ 'align': [] }],
+          ['link', 'image', 'video'],
+          ['clean']
+        ]
+      },
+      theme: 'snow'
+    });
+
+    // Custom image handler to convert images to base64
+    function imageHandler(editor) {
+      return function() {
+        const input = document.createElement('input');
+        input.setAttribute('type', 'file');
+        input.setAttribute('accept', 'image/*');
+        input.click();
+        
+        input.onchange = () => {
+          const file = input.files[0];
+          if (!file) return;
+          
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            const range = editor.getSelection();
+            if (range) {
+              // Convert image to base64 and embed
+              editor.insertEmbed(range.index, 'image', e.target.result);
+            }
+          };
+          reader.readAsDataURL(file);
+        };
+      };
+    }
+
+    // Set image handlers
+    bodyEditor.getModule('toolbar').addHandler('image', imageHandler(bodyEditor));
+    modalEditor.getModule('toolbar').addHandler('image', imageHandler(modalEditor));
+
+    // Track current translation being edited
+    let currentTranslation = null;
+    let allTranslations = [];
+    let allLanguages = [];
+    let allEntities = [];
+
+    // Show notification
+    function showNotification(message, isError = false) {
+      const notification = document.getElementById('notification');
+      const messageEl = document.getElementById('notification-message');
+      
+      messageEl.textContent = message;
+      notification.className = isError ? 
+        'notification show error' : 'notification show';
+      
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+
+    // Load languages from Supabase
+    async function loadLanguages() {
+      try {
+        const { data, error } = await supabase.from('languages').select();
+        
+        if (error) throw error;
+        
+        allLanguages = data;
+        $('#language-list').empty();
+        $('#trans-lang').empty();
+        
+        data.forEach(l => {
+          $('#language-list').append(`
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <span class="badge bg-primary me-2">${l.code}</span>
+                <span>${l.name}</span>
+              </div>
+              <button class="btn btn-sm btn-danger" onclick="deleteLanguage(${l.language_id})">
+                <i class="fas fa-trash"></i>
+              </button>
+            </li>
+          `);
+          $('#trans-lang').append(`<option value="${l.language_id}">${l.name} (${l.code})</option>`);
+        });
+        
+        $('#languages-count').text(data.length);
+        $('#lang-count-badge').text(data.length + ' languages');
+        showNotification(`Loaded ${data.length} languages`);
+      } catch (error) {
+        console.error('Error loading languages:', error);
+        showNotification('Error loading languages', true);
+      }
+    }
+
+    // Load entities from Supabase
+    async function loadEntities() {
+      try {
+        const { data, error } = await supabase.from('entities').select();
+        
+        if (error) throw error;
+        
+        allEntities = data;
+        $('#entity-list, #parent, #trans-entity').empty();
+        $('#parent').append('<option value="">— None —</option>');
+        
+        data.forEach(e => {
+          const parentName = e.parent_id ? `Parent: ${e.parent_id}` : 'Country';
+          
+          $('#entity-list').append(`
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <span class="badge bg-primary me-2">${e.entity_id}</span>
+                <span>${parentName}</span>
+              </div>
+              <button class="btn btn-sm btn-danger" onclick="deleteEntity(${e.entity_id})">
+                <i class="fas fa-trash"></i>
+              </button>
+            </li>
+          `);
+          
+          $('#parent').append(`<option value="${e.entity_id}">Entity ${e.entity_id}</option>`);
+          $('#trans-entity').append(`<option value="${e.entity_id}">Entity ${e.entity_id}</option>`);
+        });
+        
+        $('#entities-count').text(data.length);
+        $('#entity-count-badge').text(data.length + ' entities');
+        showNotification(`Loaded ${data.length} entities`);
+      } catch (error) {
+        console.error('Error loading entities:', error);
+        showNotification('Error loading entities', true);
+      }
+    }
+
+    // Load translations from Supabase
+    async function loadTranslations(search = '') {
+      try {
+        const { data, error } = await supabase
+          .from('translations')
+          .select('translation_id, entity_id, language_id, title, body, languages (code)')
+          .order('translation_id');
+        
+        if (error) throw error;
+        
+        allTranslations = data;
+        $('#trans-list').empty();
+        
+        const filtered = data.filter(t => {
+          if (!search) return true;
+          const searchTerm = search.toLowerCase();
+          return (
+            t.title.toLowerCase().includes(searchTerm) ||
+            (t.body && t.body.toLowerCase().includes(searchTerm)) ||
+            t.entity_id.toString().includes(searchTerm) ||
+            (t.languages?.code && t.languages.code.toLowerCase().includes(searchTerm))
+          );
+        });
+        
+        filtered.forEach(t => {
+          const languageCode = t.languages?.code || 'unknown';
+          
+          $('#trans-list').append(`
+            <li class="list-group-item">
+              <div class="d-flex justify-content-between align-items-start">
+                <div style="flex: 1">
+                  <div class="d-flex align-items-center mb-2">
+                    <span class="badge bg-primary me-2">${t.entity_id}</span>
+                    <span class="badge bg-info me-2">${languageCode}</span>
+                    <span>${t.title}</span>
+                  </div>
+                  <div class="content-preview">${t.body || '<em class="text-muted">No content</em>'}</div>
+                </div>
+                <div class="d-flex flex-column gap-2">
+                  <button class="btn btn-sm btn-outline-primary" onclick="openPreviewModal(${t.translation_id})">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-secondary" onclick="openEditModal(${t.translation_id})">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn btn-sm btn-danger" onclick="deleteTranslation(${t.translation_id})">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </li>
+          `);
+        });
+        
+        $('#translations-count').text(data.length);
+        $('#trans-count-badge').text(data.length + ' translations');
+        showNotification(`Loaded ${filtered.length} of ${data.length} translations`);
+      } catch (error) {
+        console.error('Error loading translations:', error);
+        showNotification('Error loading translations', true);
+      }
+    }
+
+    // Open preview modal
+    function openPreviewModal(translationId) {
+      const translation = allTranslations.find(t => t.translation_id === translationId);
+      if (!translation) return;
+      
+      $('#preview-content').html(translation.body || '<p>No content available</p>');
+      new bootstrap.Modal(document.getElementById('previewModal')).show();
+    }
+
+    // Open edit modal
+    function openEditModal(translationId) {
+      const translation = allTranslations.find(t => t.translation_id === translationId);
+      if (!translation) return;
+      
+      currentTranslation = translation;
+      modalEditor.root.innerHTML = translation.body || '';
+      
+      // Set modal title
+      document.querySelector('#editModal .modal-title').textContent = 
+        `Editing: ${translation.title} (Entity ${translation.entity_id})`;
+      
+      // Show modal
+      new bootstrap.Modal(document.getElementById('editModal')).show();
+    }
+
+    // Save content from modal editor to Supabase
+    document.getElementById('save-content').addEventListener('click', async () => {
+      if (!currentTranslation) return;
+      
+      const htmlContent = modalEditor.root.innerHTML;
+      
+      try {
+        const { error } = await supabase
+          .from('translations')
+          .update({ body: htmlContent })
+          .eq('translation_id', currentTranslation.translation_id);
+        
+        if (error) throw error;
+        
+        // Refresh list and close modal
+        loadTranslations();
+        bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+        showNotification('Content updated successfully!');
+      } catch (error) {
+        console.error('Error saving content:', error);
+        showNotification('Error saving content', true);
+      }
+    });
+
+    // Search translations
+    $('#search-translations').on('input', e => loadTranslations(e.target.value));
+
+    // Export CSV
+    $('#export-csv').on('click', async () => {
+      try {
+        const { data, error } = await supabase.from('translations').select();
+        
+        if (error) throw error;
+        
+        // Format CSV content
+        const headers = ['translation_id', 'entity_id', 'language_id', 'title', 'body'];
+        const rows = data.map(row => 
+          headers.map(fieldName => 
+            `"${(row[fieldName] || '').toString().replace(/"/g, '""')}"`
+          ).join(',')
+        );
+        
+        const csv = [headers.join(','), ...rows].join('\n');
+        
+        // Create and download file
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'translations_' + new Date().toISOString().slice(0, 10) + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        
+        showNotification('CSV exported successfully!');
+      } catch (error) {
+        console.error('Error exporting data:', error);
+        showNotification('Error exporting data', true);
+      }
+    });
+
+    // Import CSV
+    $('#import-csv').on('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = async evt => {
+        try {
+          const text = evt.target.result;
+          const lines = text.split(/\r?\n/);
+          if (lines.length < 2) return;
+          
+          const headers = lines[0].split(',').map(h => h.replace(/"/g, ''));
+          const records = [];
+          
+          for (let i = 1; i < lines.length; i++) {
+            if (!lines[i].trim()) continue;
+            
+            const values = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/)
+              .map(v => v.replace(/^"|"$/g, '').replace(/""/g, '"'));
+            
+            if (values.length !== headers.length) continue;
+            
+            const record = {};
+            headers.forEach((header, index) => {
+              record[header] = values[index] || null;
+            });
+            records.push(record);
+          }
+          
+          // Upload records to Supabase
+          for (const record of records) {
+            try {
+              await supabase.from('translations').upsert(record);
+            } catch (err) {
+              console.error('Error importing record:', record, err);
+            }
+          }
+          
+          loadTranslations();
+          showNotification(`Successfully imported ${records.length} records`);
+        } catch (error) {
+          console.error('Error importing CSV:', error);
+          showNotification('Error importing CSV', true);
+        }
+      };
+      
+      reader.readAsText(file);
+    });
+
+    // Delete functions
+    async function deleteLanguage(id) { 
+      if (confirm('Are you sure you want to delete this language?')) {
+        try {
+          const { error } = await supabase
+            .from('languages')
+            .delete()
+            .eq('language_id', id);
+          
+          if (error) throw error;
+          
+          loadLanguages();
+          showNotification('Language deleted successfully');
+        } catch (error) {
+          console.error('Error deleting language:', error);
+          showNotification('Error deleting language', true);
+        }
+      }
+    }
+    
+    async function deleteEntity(id) { 
+      if (confirm('Are you sure you want to delete this entity?')) {
+        try {
+          const { error } = await supabase
+            .from('entities')
+            .delete()
+            .eq('entity_id', id);
+          
+          if (error) throw error;
+          
+          loadEntities();
+          showNotification('Entity deleted successfully');
+        } catch (error) {
+          console.error('Error deleting entity:', error);
+          showNotification('Error deleting entity', true);
+        }
+      }
+    }
+    
+    async function deleteTranslation(id) { 
+      if (confirm('Are you sure you want to delete this translation?')) {
+        try {
+          const { error } = await supabase
+            .from('translations')
+            .delete()
+            .eq('translation_id', id);
+          
+          if (error) throw error;
+          
+          loadTranslations();
+          showNotification('Translation deleted successfully');
+        } catch (error) {
+          console.error('Error deleting translation:', error);
+          showNotification('Error deleting translation', true);
+        }
+      }
+    }
+
+    // Initialize on document ready
+    $(document).ready(() => {
+      loadLanguages();
+      loadEntities();
+      loadTranslations();
+
+      // Refresh button
+      $('#refresh-btn').click(() => {
+        loadLanguages();
+        loadEntities();
+        loadTranslations();
+        showNotification('Data refreshed');
+      });
+
+      // Add new language
+      $('#form-language').on('submit', async e => {
+        e.preventDefault();
+        const code = $('#code').val().trim();
+        const name = $('#name').val().trim();
+        
+        if (!code || !name) {
+          showNotification('Please enter both code and name', true);
+          return;
+        }
+        
+        try {
+          const { error } = await supabase
+            .from('languages')
+            .insert({ code, name });
+          
+          if (error) throw error;
+          
+          $('#code, #name').val('');
+          loadLanguages();
+          showNotification('Language added successfully');
+        } catch (error) {
+          console.error('Error adding language:', error);
+          showNotification('Error adding language', true);
+        }
+      });
+
+      // Add new entity
+      $('#form-entity').on('submit', async e => {
+        e.preventDefault();
+        const parentId = $('#parent').val() || null;
+        
+        try {
+          const { error } = await supabase
+            .from('entities')
+            .insert({ parent_id: parentId });
+          
+          if (error) throw error;
+          
+          loadEntities();
+          showNotification('Entity added successfully');
+        } catch (error) {
+          console.error('Error adding entity:', error);
+          showNotification('Error adding entity', true);
+        }
+      });
+
+      // Add new translation
+      $('#form-trans').on('submit', async e => {
+        e.preventDefault();
+        const entityId = $('#trans-entity').val();
+        const languageId = $('#trans-lang').val();
+        const title = $('#title').val().trim();
+        const htmlBody = bodyEditor.root.innerHTML;
+        
+        if (!entityId || !languageId || !title) {
+          showNotification('Please select an entity, language, and enter a title', true);
+          return;
+        }
+        
+        try {
+          const { error } = await supabase
+            .from('translations')
+            .insert({
+              entity_id: entityId,
+              language_id: languageId,
+              title: title,
+              body: htmlBody || null
+            });
+          
+          if (error) throw error;
+          
+          // Clear form
+          $('#title').val('');
+          bodyEditor.root.innerHTML = '';
+          loadTranslations();
+          showNotification('Translation added successfully');
+        } catch (error) {
+          console.error('Error adding translation:', error);
+          showNotification('Error adding translation', true);
+        }
+      });
+    });
+  </script>
+</body>
+</html>
